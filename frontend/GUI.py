@@ -1,16 +1,17 @@
 import PySimpleGUI as sg
-import time 
+import time
+import os
 
-sg.theme("DarkGrey13")  # Koyu tema ayarı
+sg.theme("DarkGrey13")  # Tema
 
+# GUI.py dosyasının bulunduğu klasörü al
+script_dir = os.path.dirname(os.path.abspath(__file__))
+logo_path = os.path.join(script_dir, "Logo.ico")
 
 def yolo_model(images):
-    """YOLO modeline görüntüleri iletecek fonksiyon."""
-    return "13 23 85 11"  # Örnek yemek kodları
-
+    return "13 23 85 11"
 
 def api_ilet(prompt):
-    """OpenAI API'ye prompt iletip tarif önerisi döndüren fonksiyon."""
     return "Bugün: Bol yeşillikli salata ve ızgara tavuk öneriliyor!"
 
 # Ürün kodlarını isimlere çeviren sözlük
@@ -34,53 +35,112 @@ yemek_kodu_map = {
 }
 
 selected_images = []
-layout = [
-    [sg.Text("Lütfen resimlerinizi yükleyin:", font=("Helvetica", 14))],
-    [sg.Input(key="-FILE-", enable_events=True, visible=False),
-    sg.FilesBrowse(file_types=(("PNG Files", "*.png"),), size=(15, 1), font=("Helvetica", 12))],
-    [sg.Button("Seç", key="-SELECT-", size=(15, 1), font=("Helvetica", 12))],
-    [sg.Text("Şu resimleri seçtiniz:", font=("Helvetica", 14))],
-    [sg.Listbox(values=selected_images, size=(60, 8), key="-LIST-", font=("Helvetica", 12))],
-    [sg.Button("Resimleri İşle", key="-PROCESS-", size=(20, 1), font=("Helvetica", 12), disabled=True)],
-    [sg.ProgressBar(100, orientation='h', size=(50, 20), key="-PROGRESS-")],
-    [sg.Text("Yemek önerileri:", font=("Helvetica", 14))],
-    [sg.Multiline(size=(60, 12), key="-OUTPUT-", font=("Helvetica", 12), disabled=True)],
+
+# Font büyüklükleri artırıldı
+FONT_LARGE = ("Helvetica", 18)
+FONT_MEDIUM = ("Helvetica", 16)
+FONT_SMALL = ("Helvetica", 14)
+FONT_XSMALL = ("Helvetica", 12)
+# -- SOL SÜTUN (Dosya seçimi, liste, butonlar) --
+left_column = [
+    [sg.Text("Lütfen resimlerinizi yükleyin:", font=FONT_LARGE, pad=((0,0),(0,20)))],
+    [
+        sg.Input(key="-FILE-", enable_events=True, visible=False),
+        sg.FilesBrowse("PNG Ara", file_types=(("PNG Files", "*.png"),), size=(20, 2), font=FONT_MEDIUM)
+    ],
+    [
+        sg.Text("Seçilecek dosya:", font=FONT_SMALL, pad=((0,5),(10,10))),
+        sg.Text("", key="-FILENAME-", size=(60, 1), font=FONT_XSMALL)
+    ],
+    [sg.Button("Seç", key="-SELECT-", size=(12, 2), font=FONT_MEDIUM, pad=((0,0),(10,20)))],
+    [sg.Text("Şu resimleri seçtiniz:", font=FONT_LARGE, pad=((0,0),(20,10)))],
+    [sg.Listbox(values=selected_images, size=(50, 12), key="-LIST-", font=FONT_MEDIUM, expand_x=True)],
+    [sg.Button("Öneri Al", key="-PROCESS-", size=(14, 2), font=FONT_MEDIUM, disabled=True, pad=((0,0),(20,20)))]
 ]
 
-window = sg.Window("PickDish", layout, size=(700, 600))
+# -- ORTA SÜTUN (Dikey Progress Bar) --
+# Progress bar'ı dikey ('v') konumda kullanıyoruz. 
+# 'size' parametresiyle genişlik x yükseklik piksel değerini ayarlıyoruz.
+# 'expand_y=True' diyerek dikeyde uzamasına izin verebiliriz. 
+# Not: PySimpleGUI'de dikey tam dolgu her zaman mükemmel çalışmayabilir, 
+# ama yine de epey uzayacaktır.
+middle_column = [
+    [sg.ProgressBar(100, orientation='v', size=(30, 30), key="-PROGRESS-", pad=((20,20),(20,20)), expand_y=True)]
+]
+
+# -- SAĞ SÜTUN (Yemek önerileri) --
+right_column = [
+    [sg.Text("Yemek Önerileri:", font=FONT_LARGE, justification="center", pad=((0,0),(0,20)))],
+    [sg.Multiline("", size=(50, 25), key="-OUTPUT-", font=FONT_MEDIUM, disabled=True, border_width=3)]
+]
+
+# Ana layout'u 3 sütun şeklinde tanımlıyoruz.
+layout = [
+    [
+        sg.Column(left_column, vertical_alignment='top', element_justification='left', expand_y=True),
+        sg.Column(middle_column, vertical_alignment='top', element_justification='center', expand_y=True),
+        sg.Column(right_column, vertical_alignment='top', element_justification='center', expand_y=True),
+    ]
+]
+
+window = sg.Window("PickDish", layout, size=(1350, 800), icon=logo_path, resizable=True)
 
 while True:
     event, values = window.read()
-    
     if event == sg.WINDOW_CLOSED:
         break
-    
+
+    if event == "-FILE-":
+        window["-FILENAME-"].update(values["-FILE-"])
+
     if event == "-SELECT-":
+        if not values["-FILE-"]:
+            sg.popup("Hiçbir dosya seçilmedi!", title="Uyarı", font=("Helvetica", 12))
+            continue
+
         files = values["-FILE-"].split(";")
-        selected_images.extend([f for f in files if f and f not in selected_images])
-        window["-LIST-"].update(selected_images)
-        window["-PROCESS-"].update(disabled=len(selected_images) == 0)
-    
+        new_files = []
+        already_selected = []
+
+        for f in files:
+            if f and f not in selected_images:
+                new_files.append(f)
+            elif f in selected_images:
+                already_selected.append(f)
+
+        if already_selected:
+            sg.popup("Dosya zaten seçili!", title="Hata", font=("Helvetica", 12))
+
+        if new_files:
+            selected_images.extend(new_files)
+            window["-LIST-"].update(selected_images)
+            window["-PROCESS-"].update(disabled=False)
+
     if event == "-PROCESS-":
         window["-PROCESS-"].update(disabled=True)
+        # Dikey progress bar'ı sıfırla
         window["-PROGRESS-"].update_bar(0)
-        
+
+        # Basit bir animasyon
         for i in range(101):
             time.sleep(0.02)
             window["-PROGRESS-"].update_bar(i)
-        
+
+        # Basit örnek YOLO çıktısı
         codes = yolo_model(selected_images).split()
         ingredients = [yemek_kodu_map.get(int(code), "") for code in codes]
         ingredients = [ing for ing in ingredients if ing.strip()]
-        
+
         prompt = f"{', '.join(ingredients)} ürünleriyle ne tür yemekler yapabilirim tarifleri nelerdir?"
         suggestion = api_ilet(prompt)
-        
-        window["-OUTPUT-"].update(window["-OUTPUT-"].get() + "\n" + suggestion)
-        
+
+        current_output = window["-OUTPUT-"].get().strip()
+        new_text = suggestion if not current_output else current_output + "\n" + suggestion
+        window["-OUTPUT-"].update(new_text)
+
         selected_images.clear()
         window["-LIST-"].update(selected_images)
         window["-PROCESS-"].update(disabled=True)
         window["-PROGRESS-"].update_bar(0)
-        
+
 window.close()
