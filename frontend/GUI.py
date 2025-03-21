@@ -1,10 +1,10 @@
 import PySimpleGUI as sg
 import time
 import os
+sg.theme("DarkGrey13")
 
-sg.theme("DarkGrey13")  # Tema
-
-# GUI.py dosyasının bulunduğu klasörü al
+# GUI.py dosyasının bulunduğu klasör ile aynı klasöre dinamik erişim.
+#Tüm UI imageları GUI.py ile aynı directorye konulacak.
 script_dir = os.path.dirname(os.path.abspath(__file__))
 logo_path = os.path.join(script_dir, "Logo.ico")
 
@@ -36,12 +36,12 @@ yemek_kodu_map = {
 
 selected_images = []
 
-# Font büyüklükleri artırıldı
+# Font büyüklükleri artırıldı. Son commit
 FONT_LARGE = ("Helvetica", 18)
 FONT_MEDIUM = ("Helvetica", 16)
 FONT_SMALL = ("Helvetica", 14)
 FONT_XSMALL = ("Helvetica", 12)
-# -- SOL SÜTUN (Dosya seçimi, liste, butonlar) --
+#SOL SÜTUN (Dosya seçimi, liste, butonlar)
 left_column = [
     [sg.Text("Lütfen resimlerinizi yükleyin:", font=FONT_LARGE, pad=((0,0),(0,20)))],
     [
@@ -58,23 +58,18 @@ left_column = [
     [sg.Button("Öneri Al", key="-PROCESS-", size=(14, 2), font=FONT_MEDIUM, disabled=True, pad=((0,0),(20,20)))]
 ]
 
-# -- ORTA SÜTUN (Dikey Progress Bar) --
-# Progress bar'ı dikey ('v') konumda kullanıyoruz. 
-# 'size' parametresiyle genişlik x yükseklik piksel değerini ayarlıyoruz.
-# 'expand_y=True' diyerek dikeyde uzamasına izin verebiliriz. 
-# Not: PySimpleGUI'de dikey tam dolgu her zaman mükemmel çalışmayabilir, 
-# ama yine de epey uzayacaktır.
+# Progress bar
 middle_column = [
     [sg.ProgressBar(100, orientation='v', size=(30, 30), key="-PROGRESS-", pad=((20,20),(20,20)), expand_y=True)]
 ]
 
-# -- SAĞ SÜTUN (Yemek önerileri) --
+#SAĞ SÜTUN (Yemek önerileri) 
 right_column = [
     [sg.Text("Yemek Önerileri:", font=FONT_LARGE, justification="center", pad=((0,0),(0,20)))],
     [sg.Multiline("", size=(50, 25), key="-OUTPUT-", font=FONT_MEDIUM, disabled=True, border_width=3)]
 ]
 
-# Ana layout'u 3 sütun şeklinde tanımlıyoruz.
+# Ana layout'u 3 sütun şeklinde tanımladom.
 layout = [
     [
         sg.Column(left_column, vertical_alignment='top', element_justification='left', expand_y=True),
@@ -118,15 +113,15 @@ while True:
 
     if event == "-PROCESS-":
         window["-PROCESS-"].update(disabled=True)
-        # Dikey progress bar'ı sıfırla
+        # bar 0lama.
         window["-PROGRESS-"].update_bar(0)
 
-        # Basit bir animasyon
+        # Bar anim
         for i in range(101):
             time.sleep(0.02)
             window["-PROGRESS-"].update_bar(i)
 
-        # Basit örnek YOLO çıktısı
+        # YOLO çıktısı burada alınacak
         codes = yolo_model(selected_images).split()
         ingredients = [yemek_kodu_map.get(int(code), "") for code in codes]
         ingredients = [ing for ing in ingredients if ing.strip()]
