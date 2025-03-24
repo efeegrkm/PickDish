@@ -63,7 +63,7 @@ layout = [
 # Pencere oluştur
 window = sg.Window("PickDish", layout, size=(1350, 800), icon=logo_path, resizable=True)
 
-# ✅ Ana döngü
+# Ana döngü
 while True:
     event, values = window.read()
     
@@ -86,22 +86,22 @@ while True:
         window["-PROCESS-"].update(disabled=True)
         window["-PROGRESS-"].update_bar(0)
         
-        # ✅ Bar animasyonu
+        # Bar animasyonu
         for i in range(101):
             time.sleep(0.02)
             window["-PROGRESS-"].update_bar(i)
         
-        # ✅ YOLO ile malzemeleri algıla
+        # YOLO ile malzemeleri algıla
         ingredients = ytg.yolo_model(selected_images)
 
         if ingredients:
-            # ✅ Prompt'u terminale yazdır
-            print(f"\n✅ Gönderilen Prompt:\n{ingredients}")
+            # Prompt'u terminale yazdır
+            print(f"\n Gönderilen Prompt:\n{ingredients}")
 
             suggestion = ytg.tarif_uret(selected_images)
 
-            # ✅ OpenAI cevabı terminale yazdır
-            print(f"\n✅ OpenAI Yanıtı:\n{suggestion}")
+            # OpenAI cevabı terminale yazdır
+            print(f"\n OpenAI Yanıtı:\n{suggestion}")
 
             if suggestion:
                 new_text = suggestion
@@ -110,10 +110,10 @@ while True:
         else:
             new_text = "Hiçbir malzeme algılanamadı."
 
-        # ✅ Çıktıyı GUI'ye güncelle
+        # Çıktıyı GUI'ye güncelle
         window["-OUTPUT-"].update(new_text)
         
-        # ✅ Listeyi sıfırla
+        # Listeyi sıfırla
         selected_images.clear()
         window["-LIST-"].update(selected_images)
         window["-PROCESS-"].update(disabled=True)
