@@ -3,21 +3,21 @@ from ultralytics import YOLO
 import openai
 from dotenv import load_dotenv
 
-# ✅ .env dosyasından OpenAI API Key yükle
+# .env dosyasından OpenAI API Key yükle
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 if openai.api_key is None:
     raise ValueError("OpenAI API anahtarı yüklenemedi. .env dosyasını kontrol edin!")
 
-# ✅ YOLO Model Yükleme
+# YOLO Model Yükleme
 model_path = os.path.join(os.path.dirname(__file__), 'best.pt')
 if not os.path.exists(model_path):
     raise FileNotFoundError(f"{model_path} dosyası bulunamadı!")
 
 model = YOLO(model_path)
 
-# ✅ Ürün kodlarını isimlere çeviren sözlük
+#Ürün kodlarını isimlere çeviren sözlük
 yemek_kodu_map = {
     0: "elma", 1: "muz", 2: " ", 3: "tahıl gevreği", 4: "havyar", 5: "portakal", 
     6: "elma", 7: "üzüm", 8: "kuzu eti", 9: "muz", 10: "çiğ kuşbaşı dana", 
@@ -37,7 +37,7 @@ yemek_kodu_map = {
     86: "domates", 87: "wasabi?", 88: "karpuz"
 }
 
-# ✅ YOLO Model Çıktısını Al
+# YOLO Model Çıktısını Al
 def yolo_model(image_paths):
     detected_items = []
     
@@ -58,7 +58,7 @@ def yolo_model(image_paths):
     
     return detected_items
 
-# ✅ OpenAI API Çıkışı İçin Prompt Oluştur
+# OpenAI API Çıkışı İçin Prompt Oluştur
 def api_ilet(prompt):
     try:
         response = openai.chat.completions.create(
@@ -73,14 +73,14 @@ def api_ilet(prompt):
     except Exception as e:
         return f"Tarif üretirken bir hata oluştu: {str(e)}"
 
-# ✅ Tarif Üretimi
+# Tarif Üretimi
 def tarif_uret(image_paths):
     malzemeler = yolo_model(image_paths)
     
     if not malzemeler:
         return "Hiçbir malzeme algılanamadı."
 
-    # ✅ Açık ve net bir prompt tanımla
+    # Açık ve net bir prompt tanımla
     prompt = f"""
 Tespit edilen malzemeler şunlar: "{', '.join(malzemeler)}" Çıktıda bunu bu şekilde yaz. 
 
@@ -101,12 +101,12 @@ Format şu şekilde olmalı:
    - Yapılışı: ...  
 """
 
-    # ✅ Prompt'u terminale bas
+    # Prompt'u terminale bas
     print(f"\n🔎 Gönderilen Prompt:\n{prompt}")
 
     tarif = api_ilet(prompt)
     
-    # ✅ Tarifleri terminale bas
+    # Tarifleri terminale bas
     print("\n🔎 Üretilen Tarifler:\n")
     print(tarif)
     
