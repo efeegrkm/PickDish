@@ -2,6 +2,9 @@ import os
 from ultralytics import YOLO
 import openai
 from dotenv import load_dotenv
+#jpeg support için eklenti:
+from PIL import Image
+import tempfile
 
 # .env dosyasından OpenAI API Key yükle
 load_dotenv()
@@ -37,11 +40,30 @@ yemek_kodu_map = {
     86: "domates", 87: "wasabi?", 88: "karpuz"
 }
 
+def convert_jpeg_to_png(image_path):
+    """JPEG dosyasını geçici bir PNG dosyasına çevirir ve PNG dosyasının yolunu döner."""
+    # Geçici bir dosya oluştur (delete=False ile işimiz bittiğinde silebiliriz)
+    temp_dir = tempfile.gettempdir()
+    base_name = os.path.splitext(os.path.basename(image_path))[0]
+    temp_png = os.path.join(temp_dir, base_name + "_converted.png")
+    
+    with Image.open(image_path) as img:
+        img.save(temp_png, "PNG")
+    
+    return temp_png
+
 # YOLO Model Çıktısını Al
 def yolo_model(image_paths):
     detected_items = []
+    processed_images = []
     
     for image_path in image_paths:
+        # Eğer dosya JPEG ise pngye çevir
+        if image_path.lower().endswith(('.jpg', '.jpeg')):
+            converted_path = convert_jpeg_to_png(image_path)
+            image_path = converted_path
+            processed_images.append(converted_path) 
+        
         if not os.path.exists(image_path):
             print(f"Hata: '{image_path}' dosyası bulunamadı.")
             continue
