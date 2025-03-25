@@ -104,8 +104,7 @@ def tarif_uret(image_paths):
 
     # Açık ve net bir prompt tanımla
     prompt = f"""
-Tespit edilen malzemeler şunlar: "{', '.join(malzemeler)}" Çıktıda bunu bu şekilde yaz. 
-
+Tespit edilen malzemeler şunlar: "{', '.join(malzemeler)}" OpenAI çıktısında öncelikle bu kısmı çıktıda yaz -Tespit edilen malzemeler şunlar: "{', '.join(malzemeler)}"- Ardından aşağıdaki formata göre çıktı üret
 Bu malzemelerle yalnızca ve yalnızca 3 farklı tarif önerisi ver.  
 Tariflerin içeriğini detaylı yaz, ancak toplamda üçten fazla tarif verme.  
 Açık ve net bir şekilde detaylandır, ancak yalnızca 3 tarif istiyorum.  
